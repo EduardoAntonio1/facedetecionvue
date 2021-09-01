@@ -1,14 +1,18 @@
 <template>
+<v-container>
   <v-row justify="center" align="center">
-    <v-col cols="12" sm="8" md="6">
+    <v-col align="center" cols="12" sm="8" md="6">
+      <spinner v-if="cargando" :numImagenesTotal='(labels.length)*2' />
       <h2 id="resultado">{{ resultado }}</h2>
       <video id="video" width="720" height="560" autoplay muted></video>
       <canvas id="canvas" width="720" height="560"></canvas>
     </v-col>
   </v-row>
+</v-container>
 </template>
 
 <script>
+import spinner from '@/components/spinner.vue'
 export default {
   head() {
     return {
@@ -22,9 +26,14 @@ export default {
         ],
     }
   },
+  components: {
+    spinner
+  },
   data(){
     return {
-      resultado: 'CARGANDO',
+      resultado: '',
+      cargando: true,
+      labels: ['Aitana', 'Eduardo Antonio', 'Gaytan', 'Iris Selene', 'Jesus Eduardo', 'Luz Hernandez']
     }
   },
   methods: {
@@ -49,6 +58,7 @@ export default {
 
       video.addEventListener('play', async() => {
         const labeledFaceDescriptors = await loadLabeledImages()
+        this.cargando = false
         const faceMatcher = new faceapi.FaceMatcher(labeledFaceDescriptors, 0.6)
         const canvas = document.getElementById('canvas')
         const displaySize = { width: video.width, height: video.height }
@@ -73,15 +83,15 @@ export default {
           })
         }, 100)
       })
-
+      let that = this
       function loadLabeledImages() {
-        const labels = ['Aitana', 'Eduardo Antonio', 'Gaytan', 'Iris Selene', 'Jesus Eduardo', 'Luz Hernandez']
         return Promise.all(
-          labels.map(async label => {
+          that.labels.map(async label => {
             const descriptions = []
             for (let i = 1; i <= 2; i++) {
               const img = await faceapi.fetchImage(`https://raw.githubusercontent.com/EduardoAntonio1/facedetections/main/labeled_images/${label}/${i}.jpg`)
               const detections = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor()
+              that.$store.commit('updateImgCountSpinner')
               descriptions.push(detections.descriptor)
             }
 
@@ -95,12 +105,11 @@ export default {
 </script>
 
 <style scoped>
-video {
+#video {
   position: relative;
 }
-canvas {
+#canvas {
   position: absolute;
-  top: 32px;
-  left: 426px;
+  left: 466px;
 }
 </style>
