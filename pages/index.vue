@@ -1,89 +1,102 @@
 <template>
   <v-row justify="center" align="center">
     <v-col cols="12" sm="8" md="6">
-      <div class="text-center">
-        <logo />
-        <vuetify-logo />
-      </div>
-      <v-card>
-        <v-card-title class="headline">
-          Welcome to the Vuetify + Nuxt.js template
-        </v-card-title>
-        <v-card-text>
-          <p>Vuetify is a progressive Material Design component framework for Vue.js. It was designed to empower developers to create amazing applications.</p>
-          <p>
-            For more information on Vuetify, check out the <a
-              href="https://vuetifyjs.com"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              documentation
-            </a>.
-          </p>
-          <p>
-            If you have questions, please join the official <a
-              href="https://chat.vuetifyjs.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              title="chat"
-            >
-              discord
-            </a>.
-          </p>
-          <p>
-            Find a bug? Report it on the github <a
-              href="https://github.com/vuetifyjs/vuetify/issues"
-              target="_blank"
-              rel="noopener noreferrer"
-              title="contribute"
-            >
-              issue board
-            </a>.
-          </p>
-          <p>Thank you for developing with Vuetify and I look forward to bringing more exciting features in the future.</p>
-          <div class="text-xs-right">
-            <em><small>&mdash; John Leider</small></em>
-          </div>
-          <hr class="my-3">
-          <a
-            href="https://nuxtjs.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Nuxt Documentation
-          </a>
-          <br>
-          <a
-            href="https://github.com/nuxt/nuxt.js"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Nuxt GitHub
-          </a>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn
-            color="primary"
-            nuxt
-            to="/inspire"
-          >
-            Continue
-          </v-btn>
-        </v-card-actions>
-      </v-card>
+      <div id="resultado">Cargando</div>
+      <video id="video" width="720" height="560" autoplay muted></video>
+      <canvas id="canvas" width="720" height="560"></canvas>
     </v-col>
   </v-row>
 </template>
 
 <script>
-import Logo from '~/components/Logo.vue'
-import VuetifyLogo from '~/components/VuetifyLogo.vue'
-
 export default {
-  components: {
-    Logo,
-    VuetifyLogo
+  head() {
+    return {
+        script: [
+          {   
+              src: '/face-api.min.js',
+              hid: 'stripe',
+              defer: true,
+              callback: () => { this.setDetections() }
+          }
+        ],
+    }
+  },
+  methods: {
+    setDetections() {
+
+      const video = document.getElementById('video')
+      const resultado = document.getElementById('resultado')
+
+      Promise.all([
+        faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
+        faceapi.nets.faceLandmark68Net.loadFromUri('/models'),
+        faceapi.nets.faceRecognitionNet.loadFromUri('/models'),
+        faceapi.nets.faceExpressionNet.loadFromUri('/models'),
+        faceapi.nets.ssdMobilenetv1.loadFromUri('/models')
+      ]).then(startVideo)
+
+      function startVideo() {
+        navigator.getUserMedia({ video: {} },
+          stream => video.srcObject = stream,
+          err => console.error(err)
+        )
+      }
+
+      video.addEventListener('play', async() => {
+        const labeledFaceDescriptors = await loadLabeledImages()
+        const faceMatcher = new faceapi.FaceMatcher(labeledFaceDescriptors, 0.6)
+        const canvas = document.getElementById('canvas')
+        const displaySize = { width: video.width, height: video.height }
+        faceapi.matchDimensions(canvas, displaySize)
+        setInterval(async() => {
+          const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceExpressions().withFaceDescriptors()
+          const resizedDetections = faceapi.resizeResults(detections, displaySize)
+          const results = resizedDetections.map(d => faceMatcher.findBestMatch(d.descriptor))
+          canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height)
+          faceapi.draw.drawDetections(canvas, resizedDetections)
+          faceapi.draw.drawFaceLandmarks(canvas, resizedDetections)
+          faceapi.draw.drawFaceExpressions(canvas, resizedDetections)
+          results.forEach((result, i) => {
+            if (result._label == 'unknown') {
+                resultado.innerHTML = 'DESCONOCIDO'
+            } else if (result._label) {
+                resultado.innerHTML = result._label
+            }
+            const box = resizedDetections[i].detection.box
+            const drawBox = new faceapi.draw.DrawBox(box, { label: result.toString() })
+            drawBox.draw(canvas)
+          })
+        }, 100)
+      })
+
+      function loadLabeledImages() {
+        const labels = ['Aitana', 'Eduardo Antonio', 'Gaytan', 'Iris Selene', 'Jesus Eduardo', 'Luz Hernandez']
+        return Promise.all(
+          labels.map(async label => {
+            const descriptions = []
+            for (let i = 1; i <= 2; i++) {
+              const img = await faceapi.fetchImage(`https://raw.githubusercontent.com/EduardoAntonio1/facedetections/main/labeled_images/${label}/${i}.jpg`)
+              const detections = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor()
+              descriptions.push(detections.descriptor)
+            }
+
+            return new faceapi.LabeledFaceDescriptors(label, descriptions)
+          })
+        )
+      }
+    }
   }
 }
 </script>
+
+<style scoped>
+video {
+  position: relative;
+}
+canvas {
+  position: absolute;
+  top: 32px;
+  left: 426px;
+}
+</style>
