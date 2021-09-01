@@ -1,7 +1,7 @@
 <template>
   <v-row justify="center" align="center">
     <v-col cols="12" sm="8" md="6">
-      <div id="resultado">Cargando</div>
+      <h2 id="resultado">{{ resultado }}</h2>
       <video id="video" width="720" height="560" autoplay muted></video>
       <canvas id="canvas" width="720" height="560"></canvas>
     </v-col>
@@ -22,11 +22,15 @@ export default {
         ],
     }
   },
+  data(){
+    return {
+      resultado: 'CARGANDO',
+    }
+  },
   methods: {
     setDetections() {
 
       const video = document.getElementById('video')
-      const resultado = document.getElementById('resultado')
 
       Promise.all([
         faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
@@ -59,9 +63,9 @@ export default {
           faceapi.draw.drawFaceExpressions(canvas, resizedDetections)
           results.forEach((result, i) => {
             if (result._label == 'unknown') {
-                resultado.innerHTML = 'DESCONOCIDO'
+                this.resultado = 'DESCONOCIDO'
             } else if (result._label) {
-                resultado.innerHTML = result._label
+                this.resultado = result._label
             }
             const box = resizedDetections[i].detection.box
             const drawBox = new faceapi.draw.DrawBox(box, { label: result.toString() })
