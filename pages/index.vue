@@ -1,14 +1,12 @@
 <template>
-<v-container>
-  <v-row justify="center" align="center">
-    <v-col align="center" cols="12" sm="8" md="6">
-      <spinner v-if="cargando" :numImagenesTotal='(labels.length)*2' />
+  <v-row justify="center" align="center" style="height: 100%;">
+    <v-col align="center" cols="12">
+      <spinner class="pb-8" v-if="cargando" :numImagenesTotal='(labels.length)*2' />
       <h2 id="resultado">{{ resultado }}</h2>
       <video id="video" width="720" height="560" autoplay muted></video>
       <canvas id="canvas" width="720" height="560"></canvas>
     </v-col>
   </v-row>
-</v-container>
 </template>
 
 <script>
