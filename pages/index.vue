@@ -2,6 +2,7 @@
   <v-row justify="center" align="center" style="height: 100%;">
     <v-col align="center" cols="12">
       <spinner class="pb-8" v-if="cargando" :numImagenesTotal='(labels.length)*2' />
+      <h2 v-if="error">Ha ocurrido un error.</h2>
       <h2 id="resultado">{{ resultado }}</h2>
       <video id="video" width="720" height="560" autoplay muted></video>
       <canvas id="canvas" width="720" height="560"></canvas>
@@ -31,12 +32,13 @@ export default {
     return {
       resultado: '',
       cargando: true,
+      error: false,
       labels: ['Aitana', 'Eduardo Antonio', 'Gaytan', 'Iris Selene', 'Jesus Eduardo', 'Luz Hernandez']
     }
   },
   methods: {
     setDetections() {
-
+      let that = this
       const video = document.getElementById('video')
 
       Promise.all([
@@ -46,11 +48,10 @@ export default {
         faceapi.nets.faceExpressionNet.loadFromUri('/models'),
         faceapi.nets.ssdMobilenetv1.loadFromUri('/models')
       ]).then(startVideo)
-
       function startVideo() {
         navigator.getUserMedia({ video: {} },
           stream => video.srcObject = stream,
-          err => console.error(err)
+          err => that.error = true,
         )
       }
 
@@ -81,7 +82,7 @@ export default {
           })
         }, 100)
       })
-      let that = this
+      
       function loadLabeledImages() {
         return Promise.all(
           that.labels.map(async label => {
