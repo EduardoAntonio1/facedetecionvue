@@ -1,21 +1,36 @@
 <template>
-    <v-row justify="center" align="center">
-        <v-col align="center">
-            <div class="lds-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
-            <h2>Cargando imágenes de referencia: {{ contador+'/'+numImagenesTotal }}</h2>
-        </v-col>
-    </v-row>
+  <v-row justify="center" align="center">
+    <v-col align="center">
+      <div class="lds-spinner">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+      <h2>
+        Cargando imágenes de referencia: {{ contador + "/" + numImagenesTotal }}
+      </h2>
+    </v-col>
+  </v-row>
 </template>
 
 <script>
 export default {
-    props: ['numImagenesTotal'],
-    computed: {
-        contador(){
-            return this.$store.state.imgCountSpinner
-        }
+  props: ["numImagenesTotal"],
+  computed: {
+    contador() {
+      return this.$store.state.imgCountSpinner;
     }
-}
+  }
+};
 </script>
 
 <style scoped>
