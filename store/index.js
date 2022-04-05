@@ -15,10 +15,6 @@ const createStore = () => {
                 return state.imgCountSpinner;
             }
         },
-        actions: {
-
-
-        },
     })
 }
 

@@ -44,7 +44,7 @@
       :absolute="!fixed"
       app
     >
-      <span>{{ new Date().getFullYear() }} - Por Eduardo Antonio Zamora Hernández</span>
+      <span>{{ new Date().getFullYear() }} - Por Eduardo Antonio Zamora Hernández - Api creada por Justadudewhohacks</span>
     </v-footer>
   </v-app>
 </template>
