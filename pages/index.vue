@@ -62,6 +62,7 @@ export default {
         const canvas = document.getElementById('canvas')
         const displaySize = { width: video.width, height: video.height }
         faceapi.matchDimensions(canvas, displaySize)
+        var resultados = [];
         setInterval(async() => {
           const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
           .withFaceLandmarks().withFaceExpressions().withFaceDescriptors()
@@ -71,11 +72,21 @@ export default {
           faceapi.draw.drawDetections(canvas, resizedDetections)
           faceapi.draw.drawFaceLandmarks(canvas, resizedDetections)
           faceapi.draw.drawFaceExpressions(canvas, resizedDetections)
+          
           results.forEach((result, i) => {
             if (result._label == 'unknown') {
                 this.resultado = 'DESCONOCIDO'
             } else if (result._label) {
                 this.resultado = result._label
+                resultados.push(result._label)
+                if (resultados.length > 10) {
+                  resultados.splice(0, 1);
+                }
+                if(resultados.length >= 2 && (resultados[resultados.length-1] != resultados[resultados.length-2])) {
+                  this.resultado = resultados[resultados.length-1] + ' y ' + resultados[resultados.length-2]; 
+                } else {
+                  this.resultado = result._label;
+                }
             }
             const box = resizedDetections[i].detection.box
             const drawBox = new faceapi.draw.DrawBox(box, { label: result.toString() })
