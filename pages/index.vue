@@ -1,7 +1,7 @@
 <template>
   <v-row justify="center" align="center" style="height: 100%;">
     <v-col align="center" cols="12">
-      <spinner class="pb-8" v-if="cargando" :numImagenesTotal='(labels.length)*2' />
+      <spinner class="pb-8" v-if="cargando" :numImagenesTotal='numImagenesTotal' />
       <h2 v-if="error">Ha ocurrido un error.</h2>
       <h2 id="resultado">{{ resultado }}</h2>
       <video id="video" width="720" height="560" autoplay muted></video>
@@ -12,6 +12,7 @@
 
 <script>
 import spinner from '@/components/spinner.vue'
+import axios from 'axios'
 export default {
   head() {
     return {
@@ -33,9 +34,27 @@ export default {
       resultado: '',
       cargando: true,
       error: false,
-      labels: ['Aitana', 'Eduardo Antonio', 'Gaytan', 'Iris Selene', 'Jesus Eduardo', 'Luz Hernandez']
+      imgData: [],
+      numImagenesTotal: 0,
     }
   },
+  created() {
+    axios({
+        method: 'get',
+        url: 'http://localhost:3000/api/person',
+    })
+    .then((response) => {
+      console.log("RESPUESTA", response.data)
+      this.imgData = response.data;
+      this.imgData.forEach((persona) => {
+        this.numImagenesTotal = this.numImagenesTotal + persona.img.length;
+      }); 
+    })
+    .catch((response) => {
+      console.log("ERROR", response);
+    });
+  },
+
   methods: {
     setDetections() {
       let that = this
@@ -97,16 +116,15 @@ export default {
       
       function loadLabeledImages() {
         return Promise.all(
-          that.labels.map(async label => {
+          that.imgData.map(async imgInfo => {
             const descriptions = []
-            for (let i = 1; i <= 2; i++) {
-              const img = await faceapi.fetchImage(`https://raw.githubusercontent.com/EduardoAntonio1/facedetections/main/labeled_images/${label}/${i}.jpg`)
+            for (let i = 0; i < imgInfo.img.length; i++) {
+              const img = await faceapi.fetchImage(imgInfo.img[i])
               const detections = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor()
               that.$store.commit('updateImgCountSpinner')
               descriptions.push(detections.descriptor)
             }
-
-            return new faceapi.LabeledFaceDescriptors(label, descriptions)
+            return new faceapi.LabeledFaceDescriptors(imgInfo.name, descriptions)
           })
         )
       }

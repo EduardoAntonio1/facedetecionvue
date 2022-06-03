@@ -58,14 +58,14 @@ export default {
       fixed: false,
       items: [
         {
-          icon: 'mdi-apps',
+          icon: 'mdi-home',
           title: 'Inicio',
           to: '/'
         },
         {
-          icon: 'mdi-chart-bubble',
+          icon: 'mdi-cloud-upload',
           title: 'Registrar',
-          to: '/inspire'
+          to: '/register'
         }
       ],
       title: 'Identificador de Rostros'
