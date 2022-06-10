@@ -59,6 +59,32 @@
                 </v-card-actions>
             </v-card>
         </v-dialog>
+        <v-dialog
+        v-model="dialogError"
+        width="500"
+        >
+            <v-card>
+                <v-card-title>
+                    Ha ocurrido un error
+                </v-card-title>
+
+                <v-card-text>
+                    La imagen no se ha podido registrar, inténtelo de nuevo más tarde
+                </v-card-text>
+
+                <v-divider></v-divider>
+
+                <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn
+                        color="success"
+                        @click="dialogError = false"
+                    >
+                        Aceptar
+                    </v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
         <v-col align="center" cols="12">
             <v-row class="ma-0 mb-5">
                 <spinnerImgUpload v-if="isLoading" />
@@ -77,7 +103,6 @@
                     v-model="nombre"
                     solo
                     label="Nombre de la persona"
-                    clearable
                 ></v-text-field>
             </v-row>
             <v-row v-if="imageUrl" class="ma-0" justify="center">
@@ -102,6 +127,7 @@ export default {
             imageUrl: null,
             dialogEstasSeguro: false,
             dialogSuccess: false,
+            dialogError: false,
         }
     },
     methods: {
@@ -136,6 +162,11 @@ export default {
                         this.isLoading = false;
                         this.dialogSuccess = true;
                         this.imageUrl = null;
+                    })
+                    .catch((response) => {
+                        console.log("ERROR", response);
+                        this.dialogError = true;
+                        this.isLoading = false;
                     }); 
             }else {
                 alert("No haz seleccionado una imagen válida, inténtalo de nuevo.");

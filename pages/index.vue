@@ -51,7 +51,7 @@ export default {
       }); 
     })
     .catch((response) => {
-      console.log("ERROR", response);
+      this.error = true;
     });
   },
 
